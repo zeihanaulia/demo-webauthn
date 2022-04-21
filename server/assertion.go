@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 
 	log "github.com/duo-labs/webauthn.io/logger"
@@ -48,7 +49,7 @@ func (ws *Server) GetAssertion(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Errorf("error creating assertion: %v", err)
+		// log.Errorf("error creating assertion: %v", err)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -68,6 +69,7 @@ func (ws *Server) GetAssertion(w http.ResponseWriter, r *http.Request) {
 func (ws *Server) MakeAssertion(w http.ResponseWriter, r *http.Request) {
 	sessionData, err := ws.store.GetWebauthnSession("assertion", r)
 	if err != nil {
+		fmt.Println(err)
 		jsonResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -78,7 +80,7 @@ func (ws *Server) MakeAssertion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("Finishing authentication with user: %s\n", user.Username)
+	// log.Infof("Finishing authentication with user: %s\n", user.Username)
 
 	// With the session data retrieved, we need to call webauthn.FinishLogin to
 	// verify the signed challenge. This returns the webauthn.Credential that
@@ -102,18 +104,24 @@ func (ws *Server) MakeAssertion(w http.ResponseWriter, r *http.Request) {
 	// field, but for our purposes we'll just get the stored credential and
 	// use that to find the authenticator we need to update.
 	credentialID := base64.URLEncoding.EncodeToString(cred.ID)
+	fmt.Println("credentialID", credentialID)
 	storedCredential, err := models.GetCredentialForUser(&user, credentialID)
 	if err != nil {
 		log.Errorf("error getting credentials for user: %s", err)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("UpdateAuthenticatorSignCount", user.ID)
 	err = models.UpdateAuthenticatorSignCount(storedCredential.AuthenticatorID, cred.Authenticator.SignCount)
 	if err != nil {
 		log.Errorf("error updating sign count: %s", err)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("user_id", user.ID)
+
 	err = ws.store.Set("user_id", user.ID, r, w)
 	if err != nil {
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)

@@ -4,9 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
-	log "github.com/duo-labs/webauthn.io/logger"
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/gorilla/sessions"
 )
@@ -69,7 +69,9 @@ func (store *Store) SaveWebauthnSession(key string, data *webauthn.SessionData, 
 	if err != nil {
 		return err
 	}
-	return store.Set(key, marshaledData, r, w)
+
+	fmt.Println(key, string(marshaledData))
+	return store.SetStr(key, string(marshaledData), r, w)
 }
 
 // GetWebauthnSession unmarshals and returns the webauthn session information
@@ -80,11 +82,14 @@ func (store *Store) GetWebauthnSession(key string, r *http.Request) (webauthn.Se
 	if err != nil {
 		return sessionData, err
 	}
-	assertion, ok := session.Values[key].([]byte)
+
+	fmt.Println("GetWebauthnSession", session.Values[key])
+
+	assertion, ok := session.Values[key].(string)
 	if !ok {
 		return sessionData, ErrMarshal
 	}
-	err = json.Unmarshal(assertion, &sessionData)
+	err = json.Unmarshal([]byte(assertion), &sessionData)
 	if err != nil {
 		return sessionData, err
 	}
@@ -97,8 +102,23 @@ func (store *Store) GetWebauthnSession(key string, r *http.Request) (webauthn.Se
 func (store *Store) Set(key string, value interface{}, r *http.Request, w http.ResponseWriter) error {
 	session, err := store.Get(r, WebauthnSession)
 	if err != nil {
-		log.Errorf("Error getting session %s", err)
+		// log.Errorf("Error getting session %s", err)
+		fmt.Println("Set", err)
 	}
+
+	session.Values[key] = value
+	session.Save(r, w)
+	return nil
+}
+
+// Set stores a value to the session with the provided key.
+func (store *Store) SetStr(key string, value string, r *http.Request, w http.ResponseWriter) error {
+	session, err := store.Get(r, WebauthnSession)
+	if err != nil {
+		// log.Errorf("Error getting session %s", err)
+		fmt.Println("Set", err)
+	}
+
 	session.Values[key] = value
 	session.Save(r, w)
 	return nil

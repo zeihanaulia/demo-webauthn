@@ -159,6 +159,7 @@ function addUserErrorMsg(msg) {
 }
 
 function getAssertion() {
+    console.log("getAssertion")
     hideErrorAlert();
     if ($("#input-email").val() === "") {
         showErrorAlert("Please enter a username");
@@ -171,7 +172,9 @@ function getAssertion() {
             
             var user_verification = $('#select-verification').find(':selected').val();            
             var txAuthSimple_extension = $('#extension-input').val();
-
+            console.log("Get User Exist");
+            console.log(user_verification);
+            console.log(txAuthSimple_extension);
             $.get('/assertion/' + state.user.name, {
                 userVer: user_verification,
                 txAuthExtension: txAuthSimple_extension
@@ -229,6 +232,7 @@ function verifyAssertion(assertedCredential) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
+            console.log("verifyAssertion success")
             window.location = "/dashboard"
             console.log(response)
         }

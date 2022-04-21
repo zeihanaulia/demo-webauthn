@@ -40,6 +40,9 @@
                             <div class="mb-3">
                                 <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#advancedSettings" aria-expanded="false" aria-controls="collapseExample">
                                     Advanced Settings                                                                                                            
+                                </button>    
+                                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#viaOtp" aria-expanded="false" aria-controls="collapseExample">
+                                    Via OTP                                                                                                            
                                 </button>                                    
                             </div>
                             <div class="input-group">
@@ -92,6 +95,33 @@
                                     </div>
                                     <input id="extension-input" type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-lg" placeholder="Go passwordless!">
                                 </div>                                     
+                            </div>
+                        </div>
+                        <div class="collapse advanced-settings" id="viaOtp">
+                            <div class="input-group">
+                                <h3>Login via OTP</h3> 
+                                <div class="input-group input-group-lg mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="inputGroup-sizing-lg">Username</span>
+                                    </div>
+                                    <input id="otp-username" type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-lg" placeholder="Username">
+                                </div>     
+                                <div class="input-group input-group-lg mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="inputGroup-sizing-lg">Passcode</span>
+                                    </div>
+                                    <input id="otp-passcode" type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-lg" placeholder="Passcode">
+                                </div>  
+                                <div class="input-group input-group-lg mb-3">
+                                    <button onclick="loginOTP()" id="login-otp-button" class="btn btn-lg btn-primary"
+                                        data-toggle="popover" data-content="Success! Now try logging in :)">Login via OTP</button>
+                                </div>   
+                                <div class="input-group">
+                                    <div id="otp-alert">
+                                        <img class="warning-icon" src="/dist/images/warning.svg" />
+                                        <span id="otp-alert-msg"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

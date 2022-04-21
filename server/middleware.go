@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/duo-labs/webauthn.io/models"
@@ -15,13 +16,17 @@ func (ws *Server) LoginRequired(next http.HandlerFunc) http.HandlerFunc {
 		session, _ := ws.store.Get(r, session.WebauthnSession)
 		// Load the user from the database and store it in the request context
 		if id, ok := session.Values["user_id"]; ok {
+			fmt.Println("LoginRequired id, ok := session.Values[user_id]")
 			u, err := models.GetUser(id.(uint))
 			if err != nil {
+				fmt.Println("LoginRequired id, ok := session.Values[user_id] if err != nil")
 				r = r.WithContext(context.WithValue(r.Context(), "user", nil))
 			} else {
+				fmt.Println("id, ok := session.Values[user_id] else")
 				r = r.WithContext(context.WithValue(r.Context(), "user", u))
 			}
 		} else {
+			fmt.Println("LoginRequired else")
 			r = r.WithContext(context.WithValue(r.Context(), "user", nil))
 		}
 

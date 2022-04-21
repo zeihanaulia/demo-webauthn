@@ -44,8 +44,9 @@ func NewServer(config *config.Config, opts ...Option) (*Server, error) {
 		return nil, err
 	}
 	defaultWebAuthn, _ := webauthn.New(&webauthn.Config{
-		RPDisplayName: config.RelyingParty,
-		RPID:          config.RelyingParty,
+		RPDisplayName: "Demo WebAuthN",
+		RPID:          "lhrtunnel.link",
+		RPOrigin:      "https://605729540af1cc.lhrtunnel.link",
 	})
 	ws := &Server{
 		config:   config,
@@ -90,6 +91,11 @@ func (ws *Server) registerRoutes() {
 	router.HandleFunc("/assertion", ws.MakeAssertion).Methods("POST")
 	router.HandleFunc("/user/{name}/exists", ws.UserExists).Methods("GET")
 	router.HandleFunc("/user/{name}/credentials", ws.GetCredentials).Methods("GET")
+	router.HandleFunc("/clear-session", ClearSessionHandler).Methods("GET")
+	router.HandleFunc("/totp", ws.GetTOTP).Methods("GET")
+	router.HandleFunc("/verifyTotp", ws.VerifiyTOTP).Methods("POST")
+	router.HandleFunc("/upload", Upload).Methods("GET")
+	router.HandleFunc("/upload", Upload).Methods("POST")
 
 	// Authenticated handlers for viewing credentials after logging in
 	router.HandleFunc("/dashboard", ws.LoginRequired(ws.Index))

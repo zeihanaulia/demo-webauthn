@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 
 	log "github.com/duo-labs/webauthn.io/logger"
 	"github.com/duo-labs/webauthn/webauthn"
@@ -79,7 +80,7 @@ func GetUser(id uint) (User, error) {
 func GetUserByUsername(username string) (User, error) {
 	u := User{}
 	err := db.Where("username = ?", username).Find(&u).Error
-
+	fmt.Println("Error?", err)
 	if err != nil {
 		return u, err
 	}
