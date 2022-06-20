@@ -11,6 +11,7 @@ import (
 	"github.com/duo-labs/webauthn.io/config"
 	"github.com/duo-labs/webauthn.io/session"
 	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 )
 
@@ -39,19 +40,26 @@ func NewServer(config *config.Config, opts ...Option) (*Server, error) {
 		ReadTimeout:  Timeout,
 		WriteTimeout: Timeout,
 	}
-	defaultStore, err := session.NewStore()
-	if err != nil {
-		return nil, err
-	}
+	// defaultStore, err := session.NewStore()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	client := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	store, _ := session.NewStore(client)
+
 	defaultWebAuthn, _ := webauthn.New(&webauthn.Config{
 		RPDisplayName: "Demo WebAuthN",
-		RPID:          "lhrtunnel.link",
-		RPOrigin:      "https://605729540af1cc.lhrtunnel.link",
+		RPID:          "localhost",
+		RPOrigin:      "http://localhost:9005/",
 	})
 	ws := &Server{
 		config:   config,
 		server:   defaultServer,
-		store:    defaultStore,
+		store:    store,
 		webauthn: defaultWebAuthn,
 	}
 	for _, opt := range opts {

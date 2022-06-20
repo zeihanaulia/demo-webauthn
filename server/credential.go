@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -81,18 +82,23 @@ func (ws *Server) MakeNewCredential(w http.ResponseWriter, r *http.Request) {
 	// Load the session data
 	sessionData, err := ws.store.GetWebauthnSession("registration", r)
 	if err != nil {
+		fmt.Println("load session data", err)
 		jsonResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get the user associated with the credential
 	user, err := models.GetUser(models.BytesToID(sessionData.UserID))
 	if err != nil {
+		fmt.Println(" Get the user associated with the credential", err)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// Verify that the challenge succeeded
 	cred, err := ws.webauthn.FinishRegistration(user, sessionData, r)
 	if err != nil {
+		fmt.Println("  Verify that the challenge succeeded ", err)
+		fmt.Println("user ", user)
+		fmt.Println("sessionData ", sessionData)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -121,6 +127,7 @@ func (ws *Server) MakeNewCredential(w http.ResponseWriter, r *http.Request) {
 	}
 	err = models.CreateCredential(c)
 	if err != nil {
+		fmt.Println("credentialID", err)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

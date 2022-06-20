@@ -92,14 +92,22 @@ function makeCredential() {
     var resident_key_requirement = $('#select-residency').find(':selected').val();
     var txAuthSimple_extension = $('#extension-input').val();
 
-    $.get('/makeCredential/' + state.user.name, {
+    $.get(
+        '/makeCredential/' + state.user.name, 
+        // 'http://localhost:8787/webauthn/credential/' + state.user.name, 
+        {
             attType: attestation_type,
             authType: authenticator_attachment,
             userVerification: user_verification,
             residentKeyRequirement: resident_key_requirement,
             txAuthExtension: txAuthSimple_extension,
         }, null, 'json')
-        .done(function (makeCredentialOptions) {            
+        .done(function (makeCredentialOptions, textStatus, request) {   
+            console.log(request.getResponseHeader('Content-Type'));
+            console.log(request.getResponseHeader('Date'));
+            console.log("Content-Length",request.getResponseHeader('Content-Length'));
+            console.log("Set-Cookie",request.getResponseHeader('Set-Cookie'));
+            
             makeCredentialOptions.publicKey.challenge = bufferDecode(makeCredentialOptions.publicKey.challenge);
             makeCredentialOptions.publicKey.user.id = bufferDecode(makeCredentialOptions.publicKey.user.id);
             if (makeCredentialOptions.publicKey.excludeCredentials) {
@@ -122,15 +130,30 @@ function makeCredential() {
         });
 }
 
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    console.log(ca);
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+    }
+    return "";
+} 
+
 // This should be used to verify the auth data with the server
 function registerNewCredential(newCredential) {
+    console.log("get cookie", getCookie("webauthn-session"))
+
     // Move data into Arrays incase it is super long
     let attestationObject = new Uint8Array(newCredential.response.attestationObject);
     let clientDataJSON = new Uint8Array(newCredential.response.clientDataJSON);
-    let rawId = new Uint8Array(newCredential.rawId);
+    let rawId = new Uint8Array(newCredential.rawId);    
 
     $.ajax({
         url: '/makeCredential',
+        // url: 'http://localhost:8787/webauthn/credential',
         type: 'POST',
         data: JSON.stringify({
             id: newCredential.id,
@@ -141,6 +164,9 @@ function registerNewCredential(newCredential) {
                 clientDataJSON: bufferEncode(clientDataJSON),
             },
         }),
+        headers: {
+            'X-App-Token': '419vmKxA6KRbSeqcU4oGzwCPFTwxPIQp'
+        },
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {

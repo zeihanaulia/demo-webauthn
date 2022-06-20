@@ -1,14 +1,17 @@
 package session
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/duo-labs/webauthn/webauthn"
-	"github.com/gorilla/sessions"
+	"github.com/go-redis/redis/v8"
+	"github.com/rbcervilla/redisstore/v8"
 )
 
 // DefaultEncryptionKeyLength is the length of the generated encryption keys
@@ -43,23 +46,31 @@ func GenerateSecureKey(n int) ([]byte, error) {
 // Store is a wrapper around sessions.CookieStore which provides some helper
 // methods related to webauthn operations.
 type Store struct {
-	*sessions.CookieStore
+	*redisstore.RedisStore
 }
 
 // NewStore returns a new session store.
-func NewStore(keyPairs ...[]byte) (*Store, error) {
+func NewStore(client redis.UniversalClient) (*Store, error) {
 	// Generate a default encryption key if one isn't provided
-	if len(keyPairs) == 0 {
-		key, err := GenerateSecureKey(DefaultEncryptionKeyLength)
-		if err != nil {
-			return nil, err
-		}
-		keyPairs = append(keyPairs, key)
+	// if len(keyPairs) == 0 {
+	// 	key, err := GenerateSecureKey(DefaultEncryptionKeyLength)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	keyPairs = append(keyPairs, key)
+	// }
+
+	store, err := redisstore.NewRedisStore(context.Background(), client)
+	if err != nil {
+		log.Fatal("failed to create redis store: ", err)
 	}
-	store := &Store{
-		sessions.NewCookieStore(keyPairs...),
-	}
-	return store, nil
+
+	// set key prefix
+	store.KeyPrefix("core:webauthn:session")
+
+	return &Store{
+		store,
+	}, nil
 }
 
 // SaveWebauthnSession marhsals and saves the webauthn data to the provided
