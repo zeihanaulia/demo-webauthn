@@ -93,8 +93,8 @@ function makeCredential() {
     var txAuthSimple_extension = $('#extension-input').val();
 
     $.get(
-        '/makeCredential/' + state.user.name, 
-        // 'http://localhost:8787/webauthn/credential/' + state.user.name, 
+        // '/makeCredential/' + state.user.name, 
+        'http://localhost:8787/webauthn/credential/' + state.user.name, 
         {
             attType: attestation_type,
             authType: authenticator_attachment,
@@ -108,17 +108,17 @@ function makeCredential() {
             console.log("Content-Length",request.getResponseHeader('Content-Length'));
             console.log("Set-Cookie",request.getResponseHeader('Set-Cookie'));
             
-            makeCredentialOptions.publicKey.challenge = bufferDecode(makeCredentialOptions.publicKey.challenge);
-            makeCredentialOptions.publicKey.user.id = bufferDecode(makeCredentialOptions.publicKey.user.id);
-            if (makeCredentialOptions.publicKey.excludeCredentials) {
-                for (var i = 0; i < makeCredentialOptions.publicKey.excludeCredentials.length; i++) {
-                    makeCredentialOptions.publicKey.excludeCredentials[i].id = bufferDecode(makeCredentialOptions.publicKey.excludeCredentials[i].id);
+            makeCredentialOptions.data.publicKey.challenge = bufferDecode(makeCredentialOptions.data.publicKey.challenge);
+            makeCredentialOptions.data.publicKey.user.id = bufferDecode(makeCredentialOptions.data.publicKey.user.id);
+            if (makeCredentialOptions.data.publicKey.excludeCredentials) {
+                for (var i = 0; i < makeCredentialOptions.data.publicKey.excludeCredentials.length; i++) {
+                    makeCredentialOptions.data.publicKey.excludeCredentials[i].id = bufferDecode(makeCredentialOptions.data.publicKey.excludeCredentials[i].id);
                 }
             }
             console.log("Credential Creation Options");
             console.log(makeCredentialOptions);
             navigator.credentials.create({
-                publicKey: makeCredentialOptions.publicKey
+                publicKey: makeCredentialOptions.data.publicKey
             }).then(function (newCredential) {
                 console.log("PublicKeyCredential Created");
                 console.log(newCredential);
@@ -152,8 +152,8 @@ function registerNewCredential(newCredential) {
     let rawId = new Uint8Array(newCredential.rawId);    
 
     $.ajax({
-        url: '/makeCredential',
-        // url: 'http://localhost:8787/webauthn/credential',
+        // url: '/makeCredential',
+        url: 'http://localhost:8787/webauthn/credential',
         type: 'POST',
         data: JSON.stringify({
             id: newCredential.id,
