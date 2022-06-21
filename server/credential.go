@@ -94,14 +94,24 @@ func (ws *Server) MakeNewCredential(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Verify that the challenge succeeded
-	cred, err := ws.webauthn.FinishRegistration(user, sessionData, r)
+	// cred, err := ws.webauthn.FinishRegistration(user, sessionData, r)
+	// if err != nil {
+	// 	fmt.Println("  Verify that the challenge succeeded ", err)
+	// 	fmt.Println("user ", user)
+	// 	fmt.Println("sessionData ", sessionData)
+	// 	jsonResponse(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	parsedResponse, err := protocol.ParseCredentialCreationResponseBody(r.Body)
+	fmt.Println(err)
+	cred, err := ws.webauthn.CreateCredential(&user, sessionData, parsedResponse)
+	// cred, err := ws.webauthn.FinishRegistration(user, sessionData, r)
 	if err != nil {
-		fmt.Println("  Verify that the challenge succeeded ", err)
-		fmt.Println("user ", user)
-		fmt.Println("sessionData ", sessionData)
 		jsonResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	// If needed, you can perform additional checks here to ensure the
 	// authenticator and generated credential conform to your requirements.
 
