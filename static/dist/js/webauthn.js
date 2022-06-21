@@ -157,6 +157,8 @@ function registerNewCredential(newCredential, sessionID) {
         // url: '/makeCredential',
         url: 'http://localhost:8787/webauthn/credential',
         type: 'POST',
+        setCookie: sessionID,
+        crossDomain: true,
         data: JSON.stringify({
             id: newCredential.id,
             rawId: bufferEncode(rawId),
