@@ -107,23 +107,25 @@ function makeCredential() {
             console.log(request.getResponseHeader('Date'));
             console.log("Content-Length",request.getResponseHeader('Content-Length'));
             console.log("Set-Cookie",request.getResponseHeader('Set-Cookie'));
+
+            console.log(makeCredentialOptions.data)
             
-            makeCredentialOptions.data.publicKey.challenge = bufferDecode(makeCredentialOptions.data.publicKey.challenge);
-            makeCredentialOptions.data.publicKey.user.id = bufferDecode(makeCredentialOptions.data.publicKey.user.id);
-            if (makeCredentialOptions.data.publicKey.excludeCredentials) {
-                for (var i = 0; i < makeCredentialOptions.data.publicKey.excludeCredentials.length; i++) {
-                    makeCredentialOptions.data.publicKey.excludeCredentials[i].id = bufferDecode(makeCredentialOptions.data.publicKey.excludeCredentials[i].id);
+            makeCredentialOptions.data.credentialOption.publicKey.challenge = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.challenge);
+            makeCredentialOptions.data.credentialOption.publicKey.user.id = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.user.id);
+            if (makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials) {
+                for (var i = 0; i < makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials.length; i++) {
+                    makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials[i].id = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials[i].id);
                 }
             }
             console.log("Credential Creation Options");
-            console.log(makeCredentialOptions);
+            console.log("session ID",makeCredentialOptions.data.sessionId);
             navigator.credentials.create({
-                publicKey: makeCredentialOptions.data.publicKey
+                publicKey: makeCredentialOptions.data.credentialOption.publicKey
             }).then(function (newCredential) {
                 console.log("PublicKeyCredential Created");
                 console.log(newCredential);
                 state.createResponse = newCredential;
-                registerNewCredential(newCredential);
+                registerNewCredential(newCredential, makeCredentialOptions.data.sessionId);
             }).catch(function (err) {
                 console.info(err);
             });
@@ -143,7 +145,7 @@ function getCookie(cname) {
 } 
 
 // This should be used to verify the auth data with the server
-function registerNewCredential(newCredential) {
+function registerNewCredential(newCredential, sessionID) {
     console.log("get cookie", getCookie("webauthn-session"))
 
     // Move data into Arrays incase it is super long
