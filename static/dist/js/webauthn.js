@@ -92,17 +92,22 @@ function makeCredential() {
     var resident_key_requirement = $('#select-residency').find(':selected').val();
     var txAuthSimple_extension = $('#extension-input').val();
 
-    $.get(
-        // '/makeCredential/' + state.user.name, 
-        'http://localhost:8787/webauthn/credential/' + state.user.name, 
-        {
+    $.ajax({
+        url: 'http://localhost:8787/webauthn/credential/' + state.user.name,
+        data: { 
             attType: attestation_type,
             authType: authenticator_attachment,
             userVerification: user_verification,
             residentKeyRequirement: resident_key_requirement,
             txAuthExtension: txAuthSimple_extension,
-        }, null, 'json')
-        .done(function (makeCredentialOptions, textStatus, request) {   
+        },
+        type: 'GET',
+        beforeSend: function(xhr){
+           xhr.withCredentials = true;
+        },
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (makeCredentialOptions, textStatus, request) {
             console.log(request.getResponseHeader('Content-Type'));
             console.log(request.getResponseHeader('Date'));
             console.log("Content-Length",request.getResponseHeader('Content-Length'));
@@ -129,7 +134,47 @@ function makeCredential() {
             }).catch(function (err) {
                 console.info(err);
             });
-        });
+        }
+    });
+
+    // $.get(
+    //     // '/makeCredential/' + state.user.name, 
+    //     'http://localhost:8787/webauthn/credential/' + state.user.name, 
+    //     {
+    //         attType: attestation_type,
+    //         authType: authenticator_attachment,
+    //         userVerification: user_verification,
+    //         residentKeyRequirement: resident_key_requirement,
+    //         txAuthExtension: txAuthSimple_extension,
+    //     }, null, 'json')
+    //     .done(function (makeCredentialOptions, textStatus, request) {   
+    //         console.log(request.getResponseHeader('Content-Type'));
+    //         console.log(request.getResponseHeader('Date'));
+    //         console.log("Content-Length",request.getResponseHeader('Content-Length'));
+    //         console.log("Set-Cookie",request.getResponseHeader('Set-Cookie'));
+
+    //         console.log(makeCredentialOptions.data)
+            
+    //         makeCredentialOptions.data.credentialOption.publicKey.challenge = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.challenge);
+    //         makeCredentialOptions.data.credentialOption.publicKey.user.id = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.user.id);
+    //         if (makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials) {
+    //             for (var i = 0; i < makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials.length; i++) {
+    //                 makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials[i].id = bufferDecode(makeCredentialOptions.data.credentialOption.publicKey.excludeCredentials[i].id);
+    //             }
+    //         }
+    //         console.log("Credential Creation Options");
+    //         console.log("session ID",makeCredentialOptions.data.sessionId);
+    //         navigator.credentials.create({
+    //             publicKey: makeCredentialOptions.data.credentialOption.publicKey
+    //         }).then(function (newCredential) {
+    //             console.log("PublicKeyCredential Created");
+    //             console.log(newCredential);
+    //             state.createResponse = newCredential;
+    //             registerNewCredential(newCredential, makeCredentialOptions.data.sessionId);
+    //         }).catch(function (err) {
+    //             console.info(err);
+    //         });
+    //     });
 }
 
 function getCookie(cname) {
@@ -158,7 +203,10 @@ function registerNewCredential(newCredential, sessionID) {
         url: 'http://localhost:8787/webauthn/credential',
         type: 'POST',
         setCookie: sessionID,
-        crossDomain: true,
+        // xhrFields: {
+        //     withCredentials: true
+        // },
+        // crossDomain: true,
         data: JSON.stringify({
             id: newCredential.id,
             rawId: bufferEncode(rawId),
@@ -167,9 +215,13 @@ function registerNewCredential(newCredential, sessionID) {
                 attestationObject: bufferEncode(attestationObject),
                 clientDataJSON: bufferEncode(clientDataJSON),
             },
+            name:"Dimas Komarudin",
+            companyName:"personal",
+            address:"Jl. Bukit Pakar Timur IV Kav. B1, Ciburial, Cimenyan, Dago, Bandung, Ciburial, Cimenyan, Bandung Regency, West Java 40198",
         }),
         headers: {
-            'X-App-Token': '419vmKxA6KRbSeqcU4oGzwCPFTwxPIQp'
+            'X-App-Token': '419vmKxA6KRbSeqcU4oGzwCPFTwxPIQp',
+            'Webauthn-Session': sessionID
         },
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -196,57 +248,59 @@ function getAssertion() {
         return;
     }
     setUser();
-    $.get('/user/' + state.user.name + '/exists', {}, null, 'json').done(function (response) {
-            console.log(response);
-        }).then(function () {
+    // $.get('/user/' + state.user.name + '/exists', {}, null, 'json').done(function (response) {
+    //         console.log(response);
+    //     }).then(function () {
             
             var user_verification = $('#select-verification').find(':selected').val();            
             var txAuthSimple_extension = $('#extension-input').val();
             console.log("Get User Exist");
             console.log(user_verification);
             console.log(txAuthSimple_extension);
-            $.get('/assertion/' + state.user.name, {
+            console.log("Phone Number",state.user.name)
+            $.get('http://localhost:8787/webauthn/assertion/' + state.user.name, {
                 userVer: user_verification,
                 txAuthExtension: txAuthSimple_extension
             }, null, 'json')
                 .done(function (makeAssertionOptions) {
                     console.log("Assertion Options:");
                     console.log(makeAssertionOptions);
-                    makeAssertionOptions.publicKey.challenge = bufferDecode(makeAssertionOptions.publicKey.challenge);
-                    makeAssertionOptions.publicKey.allowCredentials.forEach(function (listItem) {
+                    makeAssertionOptions.data.assertion.publicKey.challenge = bufferDecode(makeAssertionOptions.data.assertion.publicKey.challenge);
+                    makeAssertionOptions.data.assertion.publicKey.allowCredentials.forEach(function (listItem) {
                         listItem.id = bufferDecode(listItem.id)
                     });
                     console.log(makeAssertionOptions);
                     navigator.credentials.get({
-                            publicKey: makeAssertionOptions.publicKey
+                            publicKey: makeAssertionOptions.data.assertion.publicKey
                         })
                         .then(function (credential) {
                             console.log(credential);
-                            verifyAssertion(credential);
+                            verifyAssertion(credential, makeAssertionOptions.data.sessionId);
                         }).catch(function (err) {
                             console.log(err.name);
                             showErrorAlert(err.message);
                         });
                 });
-        })
-        .catch(function (error) {
-            if (!error.exists) {
-                showErrorAlert("User not found, try registering one first!");
-            }
-            return;
-        });
+        // })
+        // .catch(function (error) {
+        //     if (!error.exists) {
+        //         showErrorAlert("User not found, try registering one first!");
+        //     }
+        //     return;
+        // });
 }
 
-function verifyAssertion(assertedCredential) {
+function verifyAssertion(assertedCredential, sessionID) {
     // Move data into Arrays incase it is super long
     console.log('calling verify')
+    console.log('session id', sessionID)
     let authData = new Uint8Array(assertedCredential.response.authenticatorData);
     let clientDataJSON = new Uint8Array(assertedCredential.response.clientDataJSON);
     let rawId = new Uint8Array(assertedCredential.rawId);
     let sig = new Uint8Array(assertedCredential.response.signature);
     let userHandle = new Uint8Array(assertedCredential.response.userHandle);
     $.ajax({
-        url: '/assertion',
+        url: 'http://localhost:8787/webauthn/assertion',
         type: 'POST',
         data: JSON.stringify({
             id: assertedCredential.id,
@@ -259,6 +313,10 @@ function verifyAssertion(assertedCredential) {
                 userHandle: bufferEncode(userHandle),
             },
         }),
+        headers: {
+            'X-App-Token': '419vmKxA6KRbSeqcU4oGzwCPFTwxPIQp',
+            'Webauthn-Session': sessionID
+        },
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
